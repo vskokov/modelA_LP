@@ -11,6 +11,10 @@ function parse_commandline()
             help = "mass parameter m²"
             arg_type = Float64
             default = 0.0
+        "--Z"
+            help = "coefficient Z of the conventional kinetic term Z/2 (∇φ)²"
+            arg_type = Float64
+            default = 1.0
         "--dt"
             help = "size of time step"
             arg_type = Float64
@@ -43,8 +47,9 @@ end
  2. λ is the 4 field coupling
  3. Γ is the scalar field diffusion rate; in our calculations we set it to 1, assuming that the time is measured in the appropriate units 
  4. T is the temperature 
- 5. m² = -2.28587 is the critical value of the mass parameter 
-=#
+ 5. m² = -2.28587 is the critical value of the mass parameter
+ 6. Z is the coefficient of the conventional kinetic term Z/2 (∇φ)²
+ =#
 
 parsed_args = parse_commandline()
 
@@ -55,6 +60,7 @@ const ArrayType = cpu ? Array : CuArray
 const λ = FloatType(4.0)
 const Γ = FloatType(1.0)
 const T = FloatType(1.0)
+const Z = FloatType(parsed_args["Z"])
 
 const L = parsed_args["size"]
 const m² = FloatType(-2.28587 + parsed_args["mass"])
