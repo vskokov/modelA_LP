@@ -3,7 +3,7 @@ cd(@__DIR__)
 using JLD2
 using CodecZlib
 
-include("src/modelA.jl")
+include("../src/modelA.jl")
 
 function main()
     @init_state
@@ -12,7 +12,7 @@ function main()
         thermalize(ϕ, m², L^2)
         @show t
         flush(stdout)
-        jldsave("/home/jkott/perm/modelA/thermalized/thermalized_L_$(L)_id_$(seed).jld2", true; ϕ=Array(ϕ), m²=m², t=t)
+        jldsave(joinpath(@__DIR__, "..", "data", "thermalized_L_$(L)_id_$(seed).jld2"), true; ϕ=Array(ϕ), m²=m², t=t)
     end
 end
 
