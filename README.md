@@ -20,8 +20,7 @@ The free-energy functional is
 H[φ] = ∫ d³x [ Z/2 (∇φ)²  +  1/2 (∇²φ)²  +  m²/2 φ²  +  λ/4 φ⁴ ]
 ```
 
-with **λ = 4**, **Γ = 1** (diffusion rate), **T = 1** (temperature).  The critical value
-of the mass parameter is **m²_c ≈ −2.28587**.
+with **λ = 4**, **Γ = 1** (diffusion rate), **T = 1** (temperature).
 
 Time evolution is given by the Langevin equation
 
@@ -165,7 +164,7 @@ All parameters are set via command-line arguments:
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
 | `size` (positional) | `Int` | **required** | Lattice side length L |
-| `--mass` | `Float64` | `0.0` | Mass shift δm²; actual m² = −2.28587 + δm² |
+| `--mass` | `Float64` | `-2.28587` | Actual mass parameter m² (used directly) |
 | `--Z` | `Float64` | `1.0` | Coefficient Z of the conventional kinetic term |
 | `--dt` | `Float64` | `0.04` | Langevin time step Δt |
 | `--rng` | `Int` | `0` | Random seed (0 = unseeded) |
@@ -180,7 +179,6 @@ All parameters are set via command-line arguments:
 | λ | 4.0 | φ⁴ self-coupling |
 | Γ | 1.0 | Diffusion rate |
 | T | 1.0 | Temperature |
-| m²_c | −2.28587 | Critical mass parameter |
 
 ---
 
@@ -290,7 +288,7 @@ julia --project=. -e 'using Pkg; Pkg.instantiate()'
 ## Example Usage
 
 ```bash
-# Thermalise on GPU (default), L=24, critical mass
+# Thermalise on GPU (default), L=24, default mass (m² = -2.28587)
 julia --project=. scripts/thermalize.jl 24
 
 # Thermalise on CPU with 8 threads, Float64, custom seed
@@ -300,7 +298,7 @@ julia --project=. --threads 8 scripts/thermalize.jl 24 --cpu --fp64 --rng 42
 julia --project=. --threads auto scripts/measure_single.jl 24 \
     --init data/thermalized_L_24_id_42.jld2 --rng 42
 
-# Measure with a mass shift (m² = -2.28587 + (-0.1) = -2.38587)
-julia --project=. scripts/measure_single.jl 24 --mass -0.1 \
+# Measure at a specific mass value (m² = -2.38587)
+julia --project=. scripts/measure_single.jl 24 --mass -2.38587 \
     --init data/thermalized_L_24_id_42.jld2
 ```
