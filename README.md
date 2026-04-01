@@ -42,20 +42,23 @@ modelA_LP/
 │   ├── modelA.jl        # Module entry point (imports, ASCII header)
 │   ├── initialize.jl    # Command-line argument parsing and global constants
 │   └── simulation.jl    # Core update engine (sublattice decomposition, ΔH, sweeps)
-├── thermalize.jl        # Thermalises a field configuration and saves it to disk
-├── measure.jl           # Measures observables over a range of mass values
-├── measure_single.jl    # Measures observables at a single mass value
-├── snap.jl              # Generates an ensemble of trajectory snapshots
-├── bootstrap.jl         # Bootstrap statistical analysis utilities
-├── measure.sh           # Bash wrapper for measure.jl
-├── therm.sh             # Bash wrapper for thermalize.jl
-├── submit_therm.sh      # LSF batch submission for thermalization (GPU)
-├── submit_snap.sh       # LSF batch submission for snapshot generation (GPU)
-├── submit_measure.sh    # LSF batch submission for measurements (GPU)
-├── submit_reweight.sh   # LSF batch submission for reweighting (GPU)
-├── run_cpu.sh           # LSF job template — CPU (16 threads)
-├── run_h100.sh          # LSF job template — H100 GPU
-├── run_l40s.sh          # LSF job template — L40S GPU
+├── scripts/
+│   ├── thermalize.jl    # Thermalises a field configuration and saves it to disk
+│   ├── measure.jl       # Measures observables over a range of mass values
+│   ├── measure_single.jl# Measures observables at a single mass value
+│   ├── snap.jl          # Generates an ensemble of trajectory snapshots
+│   ├── bootstrap.jl     # Bootstrap statistical analysis utilities
+│   ├── measure.sh       # Bash wrapper for measure.jl
+│   ├── therm.sh         # Bash wrapper for thermalize.jl
+│   ├── submit_therm.sh  # LSF batch submission for thermalization (GPU)
+│   ├── submit_snap.sh   # LSF batch submission for snapshot generation (GPU)
+│   ├── submit_measure.sh# LSF batch submission for measurements (GPU)
+│   ├── submit_reweight.sh# LSF batch submission for reweighting (GPU)
+│   ├── run_cpu.sh       # LSF job template — CPU (16 threads)
+│   ├── run_h100.sh      # LSF job template — H100 GPU
+│   ├── run_l40s.sh      # LSF job template — L40S GPU
+│   └── watch.sh         # Progress monitor for measurement jobs
+├── data/                # Output directory for all simulation data
 ├── Project.toml         # Julia project dependencies
 └── Manifest.toml        # Exact dependency versions
 ```
@@ -186,21 +189,22 @@ All parameters are set via command-line arguments:
 ### 1. Thermalization
 
 ```bash
-julia --threads auto thermalize.jl <L> [options]
+julia --threads auto scripts/thermalize.jl <L> [options]
 ```
 
 Runs `L` outer iterations, each performing `L²` dissipative steps, and saves the
-field to disk after each outer iteration as
+field to disk after each outer iteration in the `data/` directory as
 `thermalized_L_<L>_id_<seed>.jld2`.
 
 ### 2. Measurement
 
 ```bash
-julia --threads auto measure_single.jl <L> --init <state.jld2> [options]
+julia --threads auto scripts/measure_single.jl <L> --init <state.jld2> [options]
 ```
 
 Evolves the field for `100·L²` dissipative steps, sampling every `L²/8` steps.
-Writes a three-column ASCII file:
+Writes output files to the `data/` directory with names
+`magnetization_L_<L>_mass_<m²>_id_<seed>.dat`, each containing three columns:
 
 ```
 <step>   <M>   <Σφ²>
@@ -216,15 +220,15 @@ steps of 0.01 (i.e. `for m²0 in -3.5:-0.01:-4.0`).
 ### 3. Snapshot Generation
 
 ```bash
-julia --threads auto snap.jl <L> --init <state.jld2> [options]
+julia --threads auto scripts/snap.jl <L> --init <state.jld2> [options]
 ```
 
 Saves 2500 independent configurations (separated by `L²` dissipative steps each)
-as `snapshot_L_<L>_seed_<seed>_id_<idx>.jld2`.
+to the `data/` directory as `snapshot_L_<L>_seed_<seed>_id_<idx>.jld2`.
 
 ### 4. Statistical Analysis
 
-`bootstrap.jl` provides `average`, `variance`, and `bootstrap` functions for
+`scripts/bootstrap.jl` provides `average`, `variance`, and `bootstrap` functions for
 computing mean and uncertainty estimates from the measurement files.
 
 ---
@@ -287,16 +291,16 @@ julia --project=. -e 'using Pkg; Pkg.instantiate()'
 
 ```bash
 # Thermalise on GPU (default), L=24, critical mass
-julia --project=. thermalize.jl 24
+julia --project=. scripts/thermalize.jl 24
 
 # Thermalise on CPU with 8 threads, Float64, custom seed
-julia --project=. --threads 8 thermalize.jl 24 --cpu --fp64 --rng 42
+julia --project=. --threads 8 scripts/thermalize.jl 24 --cpu --fp64 --rng 42
 
 # Measure from a thermalised starting configuration
-julia --project=. --threads auto measure_single.jl 24 \
-    --init thermalized_L_24_id_42.jld2 --rng 42
+julia --project=. --threads auto scripts/measure_single.jl 24 \
+    --init data/thermalized_L_24_id_42.jld2 --rng 42
 
 # Measure with a mass shift (m² = -2.28587 + (-0.1) = -2.38587)
-julia --project=. measure_single.jl 24 --mass -0.1 \
-    --init thermalized_L_24_id_42.jld2
+julia --project=. scripts/measure_single.jl 24 --mass -0.1 \
+    --init data/thermalized_L_24_id_42.jld2
 ```

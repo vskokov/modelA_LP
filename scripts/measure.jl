@@ -4,7 +4,7 @@ using JLD2
 using CodecZlib
 using Printf
 
-include("src/modelA.jl")
+include("../src/modelA.jl")
 
 function op(ϕ)
     (sum(ϕ)/L^2, sum(ϕ.^2))
@@ -15,7 +15,7 @@ function run_m²(ϕ, m²0)
     skip = div(L^2,8)
     mass_id = round(m²0, digits=3)
 
-    open("/home/jkott/perm/modelA_2D/measurements/magnetization_L_$(L)_mass_$(mass_id)_id_$(seed).dat", "w") do io
+    open(joinpath(@__DIR__, "..", "data", "magnetization_L_$(L)_mass_$(mass_id)_id_$(seed).dat"), "w") do io
     for i in 0:maxt
         (M, ϕ2) = op(ϕ)
         Printf.@printf(io, "%i %f %f\n", i, M, ϕ2)

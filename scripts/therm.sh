@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 L=16
 mass=-3.81
 
@@ -11,7 +12,7 @@ for i in {1..4}; do
     err="~/tmp/err.$id"
 
     echo "echo \`date\` >> $out" >> $TMPFILE
-    echo "julia thermalize.jl --fp64 --mass=$mass --rng=$id $L 1>> $out 2> $err" >> $TMPFILE
+    echo "julia \"${SCRIPT_DIR}/thermalize.jl\" --fp64 --mass=$mass --rng=$id $L 1>> $out 2> $err" >> $TMPFILE
     echo "echo \`date\` >> $out" >> $TMPFILE
     echo "rm $TMPFILE" >> $TMPFILE
 
