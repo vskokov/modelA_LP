@@ -8,9 +8,9 @@ function parse_commandline()
 
     @add_arg_table s begin
         "--mass"
-            help = "mass parameter m²"
+            help = "actual mass parameter m² (used directly, not as a shift relative to a reference value)"
             arg_type = Float64
-            default = 0.0
+            default = -2.28587
         "--Z"
             help = "coefficient Z of the conventional kinetic term Z/2 (∇φ)²"
             arg_type = Float64
@@ -47,7 +47,7 @@ end
  2. λ is the 4 field coupling
  3. Γ is the scalar field diffusion rate; in our calculations we set it to 1, assuming that the time is measured in the appropriate units 
  4. T is the temperature 
- 5. m² = -2.28587 is the critical value of the mass parameter
+ 5. m² is the mass parameter; its value is passed directly via the --mass flag (default: -2.28587)
  6. Z is the coefficient of the conventional kinetic term Z/2 (∇φ)²
  =#
 
@@ -63,7 +63,7 @@ const T = FloatType(1.0)
 const Z = FloatType(parsed_args["Z"])
 
 const L = parsed_args["size"]
-const m² = FloatType(-2.28587 + parsed_args["mass"])
+const m² = FloatType(parsed_args["mass"])
 const Δt = FloatType(parsed_args["dt"]/Γ)
 
 const Rate= FloatType(sqrt(2.0*Δt*Γ))
