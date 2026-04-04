@@ -3,11 +3,14 @@ cd(@__DIR__)
 using JLD2
 using CodecZlib
 using Printf
+using FFTW
 
 include("../src/modelA.jl")
 
 function op(ϕ)
-    (sum(ϕ)/L^2, sum(ϕ.^2))
+    phik = cpu ? fft(ϕ) : Array(CUFFT.fft(ϕ))
+    average = phik[1,1,1]/L^3
+    (real(average), phik[:,1,1])
 end
 
 function main()
@@ -15,18 +18,31 @@ function main()
 
     thermalize(ϕ, m², L^2)
 
-    maxt = 100L^2
+    maxt = 50L^2
     skip = div(L^2,8)
     mass_id = round(m², digits=3)
+    Z_id = round(Z, digits=3)
 
-    open(joinpath(@__DIR__, "..", "data", "magnetization_L_$(L)_mass_$(mass_id)_id_$(seed).dat"), "w") do io
+    mag_path = joinpath(@__DIR__, "..", "data", "magnetization_L_$(L)_Z_$(Z_id)_mass_$(mass_id)_id_$(seed).dat")
+    ene_path = joinpath(@__DIR__, "..", "data", "energy_L_$(L)_Z_$(Z_id)_mass_$(mass_id)_id_$(seed).dat")
+
+    open(mag_path, "w") do io_mag
+    open(ene_path, "w") do io_ene
     for i in 0:maxt
-        (M, ϕ2) = op(ϕ)
-        Printf.@printf(io, "%i %f %f\n", i, M, ϕ2)
+        (M, ϕk) = op(ϕ)
+        Printf.@printf(io_mag, "%i %f", i*skip, M)
+        for kx in 1:L÷2
+            Printf.@printf(io_mag, " %.15f %.15f", real(ϕk[kx]), imag(ϕk[kx]))
+        end
+        Printf.@printf(io_mag, "\n")
+
+        H = calc_total_energy(ϕ, m², Z)
+        Printf.@printf(io_ene, "%i %.15f\n", i*skip, H)
 
         thermalize(ϕ, m², skip)
 
         flush(stdout)
+    end
     end
     end
 end
